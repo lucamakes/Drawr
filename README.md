@@ -1,4 +1,4 @@
-# Screen Draw
+# Drawr
 
 A lightweight Chrome extension for drawing and annotating on any webpage. Perfect for presentations, tutorials, bug reports, or just doodling.
 
