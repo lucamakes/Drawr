@@ -6,9 +6,11 @@
   "permissions": ["activeTab", "scripting", "storage"],
   "action": {
     "default_icon": {
-      "16": "icons/icon16.svg",
-      "48": "icons/icon48.svg",
-      "128": "icons/icon128.svg"
+          "16": "icons/128x128.png",
+    "32": "icons/128x128.png",
+    "36":"icons/128x128.png",
+    "48": "icons/128x128.png",
+    "128": "icons/128x128.png"
     },
     "default_title": "Toggle Drawr"
   },
@@ -30,8 +32,10 @@
     }
   },
   "icons": {
-    "16": "icons/icon16.svg",
-    "48": "icons/icon48.svg",
-    "128": "icons/icon128.svg"
+    "16": "icons/128x128.png",
+    "32": "icons/128x128.png",
+    "36":"icons/128x128.png",
+    "48": "icons/128x128.png",
+    "128": "icons/128x128.png"
   }
 }

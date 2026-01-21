@@ -18,28 +18,43 @@ chrome.commands.onCommand.addListener(async (command) => {
 
 async function toggleDrawMode(tabId) {
   try {
+    // Check if content script is actually running by sending a ping
     if (injectedTabs.has(tabId)) {
-      chrome.tabs.sendMessage(tabId, { action: 'toggle' });
-    } else {
-      await chrome.scripting.insertCSS({ target: { tabId }, files: ['styles.css'] });
-      await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
-      injectedTabs.add(tabId);
+      try {
+        await chrome.tabs.sendMessage(tabId, { action: 'toggle' });
+        return;
+      } catch {
+        // Content script not responding (page was refreshed), re-inject
+        injectedTabs.delete(tabId);
+      }
     }
+    
+    // Inject fresh
+    await chrome.scripting.insertCSS({ target: { tabId }, files: ['styles.css'] });
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
+    injectedTabs.add(tabId);
   } catch (err) {
     console.error('Drawr error:', err);
   }
 }
 
+// Clear tracking when tab is closed or navigates
 chrome.tabs.onRemoved.addListener((tabId) => {
   injectedTabs.delete(tabId);
 });
 
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.status === 'loading') {
+    injectedTabs.delete(tabId);
+  }
+});
+
 // Handle screenshot capture request
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.action === 'capture-screenshot') {
     chrome.tabs.captureVisibleTab(null, { format: 'png' }, (dataUrl) => {
       sendResponse({ dataUrl });
     });
-    return true; // Keep channel open for async response
+    return true;
   }
 });
