@@ -3,7 +3,7 @@
 A lightweight Chrome extension for drawing and annotating on any webpage. Perfect for presentations, tutorials, bug reports, or just doodling.
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/YOUR_USERNAME)
-[![Twitter Follow](https://img.shields.io/twitter/follow/YOUR_TWITTER?style=social)](https://twitter.com/YOUR_TWITTER)
+[![Twitter Follow](https://img.shields.io/twitter/follow/lucamakes?style=social)](https://twitter.com/lucamakes)
 
 ![Screen Draw Demo](demo.gif)
 
@@ -13,8 +13,14 @@ A lightweight Chrome extension for drawing and annotating on any webpage. Perfec
 - **Highlighter** - Semi-transparent strokes for highlighting content
 - **Text Tool** - Add text annotations anywhere on the page
 - **Eraser** - Remove parts of your drawings
+- **Arrow Tool** - Draw arrows to point at things
+- **Rectangle Tool** - Draw rectangles to highlight areas
+- **Circle Tool** - Draw circles/ellipses
 - **Color Picker** - 10 preset colors + custom color picker
-- **Undo/Clear** - Easily revert mistakes or start fresh
+- **Undo/Redo** - Easily revert mistakes or redo actions
+- **Clear** - Start fresh
+- **Screenshot** - Capture the page with your annotations as PNG
+- **Auto-Save** - Drawings persist per URL and reload when you revisit
 - **Collapsible Sidebar** - Minimal UI that stays out of your way
 - **Scroll Support** - Drawings stay anchored to page content
 - **Keyboard Shortcuts** - Fast tool switching without clicking
@@ -49,7 +55,12 @@ A lightweight Chrome extension for drawing and annotating on any webpage. Perfec
 | `3` | Highlighter |
 | `4` | Eraser |
 | `5` | Text tool |
+| `A` | Arrow tool |
+| `R` | Rectangle tool |
+| `C` | Circle tool |
 | `Z` | Undo |
+| `Y` | Redo |
+| `S` | Screenshot |
 | `D` | Clear all |
 | `H` | Toggle sidebar |
 
@@ -87,7 +98,7 @@ If you find this useful, consider:
 
 ## Contact
 
-Got questions or feedback? Reach out on Twitter: [@YOUR_TWITTER](https://twitter.com/YOUR_TWITTER)
+Got questions or feedback? Reach out on Twitter: [@lucamakes](https://twitter.com/lucamakes)
 
 ## Acknowledgments
 

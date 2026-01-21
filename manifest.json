@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Screen Draw",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Draw on any webpage with a modern, collapsible toolbar",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting", "storage"],
   "action": {
     "default_icon": {
       "16": "icons/icon16.svg",

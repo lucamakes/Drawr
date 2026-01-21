@@ -33,3 +33,13 @@ async function toggleDrawMode(tabId) {
 chrome.tabs.onRemoved.addListener((tabId) => {
   injectedTabs.delete(tabId);
 });
+
+// Handle screenshot capture request
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.action === 'capture-screenshot') {
+    chrome.tabs.captureVisibleTab(null, { format: 'png' }, (dataUrl) => {
+      sendResponse({ dataUrl });
+    });
+    return true; // Keep channel open for async response
+  }
+});
