@@ -16,7 +16,7 @@ A lightweight Chrome extension for drawing and annotating on any webpage. Perfec
 - **Shape Tools** - Arrow, rectangle, and circle tools in a dropdown menu
 - **Color Picker** - 4 preset colors (optimized for light/dark backgrounds) + custom color picker
 - **Undo/Redo** - Easily revert mistakes or redo actions
-- **Screenshot** - Capture the page with your annotations as PNG
+- **Screenshot** - Capture visible area or full page with your annotations as PNG (scrollbar-free)
 - **Auto-Save** - Drawings persist per URL and reload when you revisit
 - **Customizable Keybindings** - Remap any shortcut to your preference
 - **Collapsible Sidebar** - Minimal UI that stays out of your way
@@ -59,7 +59,8 @@ All shortcuts are customizable via the settings panel (click the gear icon).
 | `C` | Circle tool |
 | `Z` | Undo |
 | `Y` | Redo |
-| `S` | Screenshot |
+| `S` | Screenshot (visible area) |
+| `F` | Full page screenshot |
 | `D` | Clear all |
 | `H` | Toggle sidebar |
 
