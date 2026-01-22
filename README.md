@@ -27,7 +27,7 @@ A lightweight Chrome extension for drawing and annotating on any webpage. Perfec
 ### From Source
 1. Clone this repository
    ```bash
-   git clone https://github.com/cassierstudios/Drawr.git
+   git clone https://github.com/lucamakes/Drawr.git
    ```
 2. Open Chrome and go to `chrome://extensions`
 3. Enable "Developer mode" (top right)

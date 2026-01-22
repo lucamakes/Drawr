@@ -1,16 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Drawr",
-  "version": "1.1.0",
-  "description": "Draw on any webpage with a modern, collapsible toolbar",
+  "version": "1.2.0",
+  "description": "Draw and annotate any webpage. Pen, highlighter, shapes, text, and full-page screenshots.",
   "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"],
   "action": {
     "default_icon": {
-          "16": "icons/128x128.png",
-    "32": "icons/128x128.png",
-    "36":"icons/128x128.png",
-    "48": "icons/128x128.png",
-    "128": "icons/128x128.png"
+      "16": "icons/128x128.png",
+      "32": "icons/128x128.png",
+      "48": "icons/128x128.png",
+      "128": "icons/128x128.png"
     },
     "default_title": "Toggle Drawr"
   },
@@ -19,22 +19,15 @@
   },
   "commands": {
     "toggle-draw": {
-      "suggested_key": { "default": "Alt+D" },
-      "description": "Toggle drawing mode"
-    },
-    "clear-canvas": {
-      "suggested_key": { "default": "Alt+C" },
-      "description": "Clear canvas"
-    },
-    "undo": {
-      "suggested_key": { "default": "Alt+Z" },
-      "description": "Undo last stroke"
+      "suggested_key": {
+        "default": "Alt+H"
+      },
+      "description": "Open/close Drawr sidebar"
     }
   },
   "icons": {
     "16": "icons/128x128.png",
     "32": "icons/128x128.png",
-    "36":"icons/128x128.png",
     "48": "icons/128x128.png",
     "128": "icons/128x128.png"
   }
