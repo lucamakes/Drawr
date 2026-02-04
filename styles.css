@@ -14,12 +14,10 @@
 }
 
 .sd-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 2147483646;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 2147483646 !important;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -27,12 +25,15 @@
 
 .sd-overlay.active {
   pointer-events: auto;
-  cursor: crosshair;
   opacity: 1;
 }
 
-.sd-overlay.pointer-mode {
-  cursor: default !important;
+.sd-overlay .canvas-container {
+  position: absolute !important;
+}
+
+.sd-overlay .upper-canvas {
+  cursor: crosshair !important;
 }
 
 .sd-sidebar {
@@ -586,4 +587,22 @@
   display: none !important;
   width: 0 !important;
   height: 0 !important;
+}
+
+
+/* FPS Counter */
+.sd-fps-counter {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  z-index: 2147483647;
+  background: rgba(0, 0, 0, 0.7);
+  color: #4ade80;
+  font-family: 'Inter', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  pointer-events: none;
+  user-select: none;
 }

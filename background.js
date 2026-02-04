@@ -29,8 +29,9 @@ async function toggleDrawMode(tabId) {
       }
     }
     
-    // Inject fresh
+    // Inject fresh - fabric.js first, then styles, then content script
     await chrome.scripting.insertCSS({ target: { tabId }, files: ['styles.css'] });
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['fabric.min.js'] });
     await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
     injectedTabs.add(tabId);
   } catch (err) {
