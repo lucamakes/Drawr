@@ -20,9 +20,7 @@
     color: '#3b82f6',
     size: 4,
     collapsed: false,
-    shapesDropdownOpen: false,
-    screenshotDropdownOpen: false,
-    drawDropdownOpen: false
+    screenshotDropdownOpen: false
   };
 
   const colors = [
@@ -175,25 +173,15 @@
       <div class="sd-section">
         <span class="sd-label">Tools</span>
         <button class="sd-tool-btn" data-tool="pointer" title="Pointer"><img class="sd-icon" src="${iconUrl('arrow_selector_tool')}" alt=""></button>
-        <div class="sd-dropdown-wrapper">
-          <button class="sd-tool-btn sd-draw-btn active" data-tool="draw" title="Draw"><img class="sd-icon sd-draw-icon" src="${iconUrl('edit')}" alt="" data-default="${iconUrl('edit')}" data-pen="${iconUrl('edit')}" data-highlighter="${iconUrl('ink_highlighter')}" data-eraser="${iconUrl('ink_eraser')}"></button>
-          <div class="sd-draw-dropdown">
-            <button class="sd-dropdown-item active" data-tool="pen"><img class="sd-icon" src="${iconUrl('edit')}" alt=""><span>Pen</span></button>
-            <button class="sd-dropdown-item" data-tool="highlighter"><img class="sd-icon" src="${iconUrl('ink_highlighter')}" alt=""><span>Highlighter</span></button>
-            <button class="sd-dropdown-item" data-tool="eraser"><img class="sd-icon" src="${iconUrl('ink_eraser')}" alt=""><span>Eraser</span></button>
-          </div>
-        </div>
+        <button class="sd-tool-btn active" data-tool="pen" title="Pen"><img class="sd-icon" src="${iconUrl('edit')}" alt=""></button>
+        <button class="sd-tool-btn" data-tool="highlighter" title="Highlighter"><img class="sd-icon" src="${iconUrl('ink_highlighter')}" alt=""></button>
+        <button class="sd-tool-btn" data-tool="eraser" title="Eraser"><img class="sd-icon" src="${iconUrl('ink_eraser')}" alt=""></button>
         <button class="sd-tool-btn" data-tool="text" title="Text"><img class="sd-icon" src="${iconUrl('title')}" alt=""></button>
         <button class="sd-tool-btn" data-tool="move" title="Move"><img class="sd-icon" src="${iconUrl('open_with')}" alt=""></button>
-        <div class="sd-dropdown-wrapper">
-          <button class="sd-tool-btn sd-shapes-btn" data-tool="shapes" title="Shapes"><img class="sd-icon sd-shape-icon" src="${iconUrl('shapes')}" alt="" data-default="${iconUrl('shapes')}" data-arrow="${iconUrl('arrow_right_alt')}" data-rectangle="${iconUrl('rectangle')}" data-circle="${iconUrl('circle')}" data-line="${iconUrl('horizontal_rule')}"></button>
-          <div class="sd-shapes-dropdown">
-            <button class="sd-dropdown-item" data-tool="arrow"><img class="sd-icon" src="${iconUrl('arrow_right_alt')}" alt=""><span>Arrow</span></button>
-            <button class="sd-dropdown-item" data-tool="rectangle"><img class="sd-icon" src="${iconUrl('rectangle')}" alt=""><span>Rectangle</span></button>
-            <button class="sd-dropdown-item" data-tool="circle"><img class="sd-icon" src="${iconUrl('circle')}" alt=""><span>Circle</span></button>
-            <button class="sd-dropdown-item" data-tool="line"><img class="sd-icon" src="${iconUrl('horizontal_rule')}" alt=""><span>Line</span></button>
-          </div>
-        </div>
+        <button class="sd-tool-btn" data-tool="arrow" title="Arrow"><img class="sd-icon" src="${iconUrl('arrow_right_alt')}" alt=""></button>
+        <button class="sd-tool-btn" data-tool="rectangle" title="Rectangle"><img class="sd-icon" src="${iconUrl('rectangle')}" alt=""></button>
+        <button class="sd-tool-btn" data-tool="circle" title="Circle"><img class="sd-icon" src="${iconUrl('circle')}" alt=""></button>
+        <button class="sd-tool-btn" data-tool="line" title="Line"><img class="sd-icon" src="${iconUrl('horizontal_rule')}" alt=""></button>
       </div>
       <div class="sd-section">
         <span class="sd-label">Color</span>
@@ -277,76 +265,18 @@
   });
 
 
-  // Draw dropdown (pen, highlighter, eraser)
-  const drawBtn = sidebar.querySelector('.sd-draw-btn');
-  const drawDropdown = sidebar.querySelector('.sd-draw-dropdown');
-  const drawIcon = sidebar.querySelector('.sd-draw-icon');
-
-  drawBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    state.drawDropdownOpen = !state.drawDropdownOpen;
-    drawDropdown.classList.toggle('open', state.drawDropdownOpen);
-    // Close other dropdowns
-    if (state.shapesDropdownOpen) { shapesDropdown.classList.remove('open'); state.shapesDropdownOpen = false; }
-    if (state.screenshotDropdownOpen) { screenshotDropdown.classList.remove('open'); state.screenshotDropdownOpen = false; }
-  });
-
-  drawDropdown.querySelectorAll('.sd-dropdown-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const tool = item.dataset.tool;
-      setTool(tool);
-      drawIcon.src = drawIcon.dataset[tool] || drawIcon.dataset.default;
-      drawDropdown.querySelectorAll('.sd-dropdown-item').forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
-      drawDropdown.classList.remove('open');
-      state.drawDropdownOpen = false;
-    });
-  });
-
-  // Shapes dropdown
-  const shapesBtn = sidebar.querySelector('.sd-shapes-btn');
-  const shapesDropdown = sidebar.querySelector('.sd-shapes-dropdown');
-  const shapeIcon = sidebar.querySelector('.sd-shape-icon');
-
-  shapesBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    state.shapesDropdownOpen = !state.shapesDropdownOpen;
-    shapesDropdown.classList.toggle('open', state.shapesDropdownOpen);
-    // Close other dropdowns
-    if (state.drawDropdownOpen) { drawDropdown.classList.remove('open'); state.drawDropdownOpen = false; }
-    if (state.screenshotDropdownOpen) { screenshotDropdown.classList.remove('open'); state.screenshotDropdownOpen = false; }
-  });
-
-  shapesDropdown.querySelectorAll('.sd-dropdown-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const tool = item.dataset.tool;
-      setTool(tool);
-      shapeIcon.src = shapeIcon.dataset[tool] || shapeIcon.dataset.default;
-      shapesDropdown.querySelectorAll('.sd-dropdown-item').forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
-      shapesDropdown.classList.remove('open');
-      state.shapesDropdownOpen = false;
-    });
-  });
-
-  document.addEventListener('click', () => {
-    if (state.drawDropdownOpen) { drawDropdown.classList.remove('open'); state.drawDropdownOpen = false; }
-    if (state.shapesDropdownOpen) { shapesDropdown.classList.remove('open'); state.shapesDropdownOpen = false; }
-    if (state.screenshotDropdownOpen) { screenshotDropdown.classList.remove('open'); state.screenshotDropdownOpen = false; }
-  });
-
   // Screenshot dropdown
   const screenshotBtn = sidebar.querySelector('.sd-screenshot-btn');
   const screenshotDropdown = sidebar.querySelector('.sd-screenshot-dropdown');
+
+  document.addEventListener('click', () => {
+    if (state.screenshotDropdownOpen) { screenshotDropdown.classList.remove('open'); state.screenshotDropdownOpen = false; }
+  });
 
   screenshotBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     state.screenshotDropdownOpen = !state.screenshotDropdownOpen;
     screenshotDropdown.classList.toggle('open', state.screenshotDropdownOpen);
-    if (state.drawDropdownOpen) { drawDropdown.classList.remove('open'); state.drawDropdownOpen = false; }
-    if (state.shapesDropdownOpen) { shapesDropdown.classList.remove('open'); state.shapesDropdownOpen = false; }
   });
 
   screenshotDropdown.querySelectorAll('.sd-dropdown-item').forEach(item => {
@@ -403,7 +333,7 @@
   const sizeValue = sidebar.querySelector('.sd-size-value');
 
   toggleTab.addEventListener('click', toggleCollapse);
-  sidebar.querySelectorAll('.sd-tool-btn:not(.sd-shapes-btn)').forEach(btn => {
+  sidebar.querySelectorAll('.sd-tool-btn').forEach(btn => {
     btn.addEventListener('click', () => setTool(btn.dataset.tool));
   });
   colorsContainer.addEventListener('click', (e) => {
@@ -436,20 +366,10 @@
     state.tool = tool;
     canvas.discardActiveObject().renderAll();
     
-    // Update UI - handle draw dropdown, shapes dropdown, and regular buttons
+    // Update UI - simple active toggle for all tool buttons
     sidebar.querySelectorAll('.sd-tool-btn').forEach(b => {
-      const isShapesBtn = b.classList.contains('sd-shapes-btn');
-      const isDrawBtn = b.classList.contains('sd-draw-btn');
-      if (isShapesBtn) {
-        b.classList.toggle('active', shapeTools.includes(tool));
-      } else if (isDrawBtn) {
-        b.classList.toggle('active', drawTools.includes(tool));
-      } else if (!shapeTools.includes(b.dataset.tool) && !drawTools.includes(b.dataset.tool)) {
-        b.classList.toggle('active', b.dataset.tool === tool);
-      }
+      b.classList.toggle('active', b.dataset.tool === tool);
     });
-    shapesDropdown.querySelectorAll('.sd-dropdown-item').forEach(item => item.classList.toggle('active', item.dataset.tool === tool));
-    drawDropdown.querySelectorAll('.sd-dropdown-item').forEach(item => item.classList.toggle('active', item.dataset.tool === tool));
 
     // Configure canvas based on tool
     if (tool === 'pointer') {
@@ -997,15 +917,15 @@
     if (!e.ctrlKey && !e.metaKey && !e.altKey && state.active) {
       const key = e.key.toLowerCase();
       if (key === keybindings.pointer) setTool('pointer');
-      else if (key === keybindings.pen) { setTool('pen'); drawIcon.src = drawIcon.dataset.pen; }
-      else if (key === keybindings.highlighter) { setTool('highlighter'); drawIcon.src = drawIcon.dataset.highlighter; }
-      else if (key === keybindings.eraser) { setTool('eraser'); drawIcon.src = drawIcon.dataset.eraser; }
+      else if (key === keybindings.pen) setTool('pen');
+      else if (key === keybindings.highlighter) setTool('highlighter');
+      else if (key === keybindings.eraser) setTool('eraser');
       else if (key === keybindings.text) setTool('text');
       else if (key === keybindings.move) setTool('move');
-      else if (key === keybindings.line) { setTool('line'); shapeIcon.src = shapeIcon.dataset.line; }
-      else if (key === keybindings.arrow) { setTool('arrow'); shapeIcon.src = shapeIcon.dataset.arrow; }
-      else if (key === keybindings.rectangle) { setTool('rectangle'); shapeIcon.src = shapeIcon.dataset.rectangle; }
-      else if (key === keybindings.circle) { setTool('circle'); shapeIcon.src = shapeIcon.dataset.circle; }
+      else if (key === keybindings.line) setTool('line');
+      else if (key === keybindings.arrow) setTool('arrow');
+      else if (key === keybindings.rectangle) setTool('rectangle');
+      else if (key === keybindings.circle) setTool('circle');
       else if (key === keybindings.undo) { e.preventDefault(); undo(); }
       else if (key === keybindings.redo) { e.preventDefault(); redo(); }
       else if (key === keybindings.screenshot) { e.preventDefault(); takeScreenshot(); }
