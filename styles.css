@@ -17,9 +17,11 @@
 }
 
 .sd-overlay {
-  position: absolute !important;
+  position: fixed !important;
   top: 0 !important;
   left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
   z-index: 2147483646 !important;
   pointer-events: none;
   opacity: 0;
@@ -32,7 +34,7 @@
 }
 
 .sd-overlay .canvas-container {
-  position: absolute !important;
+  position: fixed !important;
   overflow: hidden !important;
 }
 
@@ -64,6 +66,7 @@
 
 .sd-sidebar.collapsed {
   transform: translateY(-50%) translateX(96px);
+  box-shadow: none;
 }
 
 .sd-toggle-tab {
@@ -650,4 +653,21 @@
 
 .sd-donate-btn:hover .sd-kofi-icon {
   fill: #e54545;
+}
+
+
+/* FPS counter */
+.sd-fps {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 2147483647;
+  background: rgba(0, 0, 0, 0.7);
+  color: #0f0;
+  font-family: monospace;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  user-select: none;
 }

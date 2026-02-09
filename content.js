@@ -57,9 +57,9 @@
   fontLink.rel = 'stylesheet';
   document.head.appendChild(fontLink);
 
-  // Calculate canvas dimensions - start with viewport only for better performance
+  // Calculate canvas dimensions - viewport only (fixed positioning)
   const viewportHeight = window.innerHeight;
-  const viewportWidth = document.documentElement.scrollWidth || window.innerWidth;
+  const viewportWidth = window.innerWidth;
   
   // Create Fabric canvas with performance optimizations
   const canvasEl = document.createElement('canvas');
@@ -74,7 +74,7 @@
   const canvas = new fabric.Canvas('sd-fabric-canvas', {
     isDrawingMode: true,
     width: viewportWidth,
-    height: viewportHeight + 1000, // Start with viewport + buffer
+    height: viewportHeight,
     selection: true,
     renderOnAddRemove: false, // Manual render control for batching
     skipTargetFind: false,
@@ -83,9 +83,19 @@
   });
 
   canvas.wrapperEl.className = 'sd-overlay active';
-  canvas.wrapperEl.style.cssText = 'position:absolute;top:0;left:0;z-index:2147483646;';
+  canvas.wrapperEl.style.cssText = 'position:fixed;top:0;left:0;z-index:2147483646;width:100vw;height:100vh;';
   canvas.freeDrawingBrush.color = state.color;
   canvas.freeDrawingBrush.width = state.size;
+
+  // Sync canvas pan with page scroll
+  function syncScroll() {
+    const sx = window.scrollX;
+    const sy = window.scrollY;
+    canvas.viewportTransform[4] = -sx;
+    canvas.viewportTransform[5] = -sy;
+    canvas.requestRenderAll();
+  }
+  syncScroll();
 
   // Performance: Throttled render function
   let renderPending = false;
@@ -243,6 +253,24 @@
     </div>
   `;
   document.body.appendChild(sidebar);
+
+  // FPS counter
+  const fpsEl = document.createElement('div');
+  fpsEl.className = 'sd-fps';
+  fpsEl.textContent = '-- FPS';
+  document.body.appendChild(fpsEl);
+  let fpsFrames = 0, fpsLast = performance.now();
+  function fpsLoop() {
+    fpsFrames++;
+    const now = performance.now();
+    if (now - fpsLast >= 1000) {
+      fpsEl.textContent = fpsFrames + ' FPS';
+      fpsFrames = 0;
+      fpsLast = now;
+    }
+    requestAnimationFrame(fpsLoop);
+  }
+  requestAnimationFrame(fpsLoop);
 
   // Keybindings UI
   function updateKeybindingsUI() {
@@ -889,14 +917,32 @@
       }
     }
     
-    // Draw fabric canvas content
-    const fabricDataUrl = canvas.toDataURL({ multiplier: dpr });
+    // Draw fabric canvas content — temporarily reset viewport transform to get all objects
+    const savedTransform = canvas.viewportTransform.slice();
+    canvas.viewportTransform = [1, 0, 0, 1, 0, 0];
+    const objects = canvas.getObjects();
+    let minX = 0, minY = 0, maxX = 0, maxY = 0;
+    objects.forEach(obj => {
+      const bound = obj.getBoundingRect();
+      if (bound.left < minX) minX = bound.left;
+      if (bound.top < minY) minY = bound.top;
+      if (bound.left + bound.width > maxX) maxX = bound.left + bound.width;
+      if (bound.top + bound.height > maxY) maxY = bound.top + bound.height;
+    });
+    const fabricDataUrl = canvas.toDataURL({
+      left: 0,
+      top: 0,
+      width: Math.max(maxX, fullWidth),
+      height: Math.max(maxY, fullHeight),
+      multiplier: dpr
+    });
+    canvas.viewportTransform = savedTransform;
     const fabricImg = await new Promise(resolve => {
       const i = new Image();
       i.onload = () => resolve(i);
       i.src = fabricDataUrl;
     });
-    finalCtx.drawImage(fabricImg, 0, 0, canvas.width, canvas.height);
+    finalCtx.drawImage(fabricImg, 0, 0, Math.max(maxX, fullWidth), Math.max(maxY, fullHeight));
     
     window.scrollTo(originalScrollX, originalScrollY);
     
@@ -964,18 +1010,9 @@
   });
 
   // Handle scroll - extend canvas if needed (throttled)
-  let scrollTimeout = null;
+  // Handle scroll - sync canvas pan with page scroll
   window.addEventListener('scroll', () => {
-    if (scrollTimeout) return;
-    scrollTimeout = setTimeout(() => {
-      scrollTimeout = null;
-      const scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
-      const neededHeight = scrollTop + window.innerHeight + 500;
-      if (neededHeight > canvas.getHeight() && canvas.getHeight() < 15000) {
-        canvas.setHeight(Math.min(neededHeight + 1000, 15000));
-        requestRender();
-      }
-    }, 100);
+    syncScroll();
   }, { passive: true });
 
   // Handle resize (debounced)
@@ -983,8 +1020,9 @@
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
-      canvas.setWidth(document.documentElement.scrollWidth || window.innerWidth);
-      requestRender();
+      canvas.setWidth(window.innerWidth);
+      canvas.setHeight(window.innerHeight);
+      syncScroll();
     }, 150);
   });
 
