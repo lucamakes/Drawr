@@ -209,6 +209,10 @@
         <button class="sd-action-btn danger" data-action="clear" title="Clear"><img class="sd-icon" src="${iconUrl('delete')}" alt=""></button>
         <button class="sd-action-btn sd-info-btn" data-action="info" title="Settings"><img class="sd-icon" src="${iconUrl('settings')}" alt=""></button>
       </div>
+      <a class="sd-donate-btn" href="https://ko-fi.com/" target="_blank" rel="noopener noreferrer" title="Buy me a coffee">
+        <svg class="sd-kofi-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-2.866-2.596-3.935-4.079c-1.093-1.48-.376-3.573 1.39-3.573 1.124 0 1.869.776 2.321 1.41.449-.634 1.197-1.41 2.321-1.41 1.766 0 2.482 2.093 1.914 3.676z"/></svg>
+        <span>Donate</span>
+      </a>
     </div>
     <div class="sd-info-popup">
       <div class="sd-info-header">

@@ -50,7 +50,7 @@
   flex-direction: column;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.25);
   font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
@@ -612,4 +612,42 @@
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   pointer-events: none;
+}
+
+
+/* Donate button */
+.sd-donate-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 0;
+  border: none;
+  background: rgba(255, 95, 95, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: #ff5f5f;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+}
+
+.sd-donate-btn:hover {
+  background: rgba(255, 95, 95, 0.15);
+  color: #e54545;
+}
+
+.sd-kofi-icon {
+  width: 16px;
+  height: 16px;
+  fill: #ff5f5f;
+  transition: fill 0.2s ease;
+}
+
+.sd-donate-btn:hover .sd-kofi-icon {
+  fill: #e54545;
 }
