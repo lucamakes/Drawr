@@ -87,15 +87,42 @@
   canvas.freeDrawingBrush.color = state.color;
   canvas.freeDrawingBrush.width = state.size;
 
-  // Sync canvas pan with page scroll
-  function syncScroll() {
+  // Sync canvas pan with page scroll using CSS transforms (GPU-accelerated)
+  // During scroll: use CSS translate to shift the canvas (zero-cost GPU op)
+  // After scroll ends: do a proper Fabric render with viewportTransform
+  let lastScrollX = window.scrollX;
+  let lastScrollY = window.scrollY;
+  let scrollRenderTimeout = null;
+
+  function syncScrollCSS() {
     const sx = window.scrollX;
     const sy = window.scrollY;
+    // Offset relative to last Fabric-rendered position
+    const dx = -(sx - lastScrollX);
+    const dy = -(sy - lastScrollY);
+    const containers = canvas.wrapperEl.querySelectorAll('canvas');
+    for (let i = 0; i < containers.length; i++) {
+      containers[i].style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+  }
+
+  function syncScrollFabric() {
+    const sx = window.scrollX;
+    const sy = window.scrollY;
+    lastScrollX = sx;
+    lastScrollY = sy;
     canvas.viewportTransform[4] = -sx;
     canvas.viewportTransform[5] = -sy;
+    // Reset CSS transform before Fabric render
+    const containers = canvas.wrapperEl.querySelectorAll('canvas');
+    for (let i = 0; i < containers.length; i++) {
+      containers[i].style.transform = '';
+    }
     canvas.requestRenderAll();
   }
-  syncScroll();
+
+  // Initial sync
+  syncScrollFabric();
 
   // Performance: Throttled render function
   let renderPending = false;
@@ -1009,10 +1036,11 @@
     else if (msg.action === 'undo') undo();
   });
 
-  // Handle scroll - extend canvas if needed (throttled)
-  // Handle scroll - sync canvas pan with page scroll
+  // Handle scroll - CSS transform during scroll, Fabric render when scroll stops
   window.addEventListener('scroll', () => {
-    syncScroll();
+    syncScrollCSS();
+    clearTimeout(scrollRenderTimeout);
+    scrollRenderTimeout = setTimeout(syncScrollFabric, 100);
   }, { passive: true });
 
   // Handle resize (debounced)
@@ -1022,7 +1050,7 @@
     resizeTimeout = setTimeout(() => {
       canvas.setWidth(window.innerWidth);
       canvas.setHeight(window.innerHeight);
-      syncScroll();
+      syncScrollFabric();
     }, 150);
   });
 
