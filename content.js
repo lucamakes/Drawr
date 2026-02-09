@@ -61,7 +61,7 @@
 
   // Calculate canvas dimensions - start with viewport only for better performance
   const viewportHeight = window.innerHeight;
-  const viewportWidth = window.innerWidth;
+  const viewportWidth = document.documentElement.scrollWidth || window.innerWidth;
   
   // Create Fabric canvas with performance optimizations
   const canvasEl = document.createElement('canvas');
@@ -1059,7 +1059,7 @@
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
-      canvas.setWidth(window.innerWidth);
+      canvas.setWidth(document.documentElement.scrollWidth || window.innerWidth);
       requestRender();
     }, 150);
   });

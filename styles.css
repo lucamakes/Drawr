@@ -33,6 +33,7 @@
 
 .sd-overlay .canvas-container {
   position: absolute !important;
+  overflow: hidden !important;
 }
 
 .sd-overlay .upper-canvas {
