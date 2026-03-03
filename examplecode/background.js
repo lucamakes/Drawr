@@ -16,20 +16,8 @@ chrome.action.onClicked.addListener((tab) => {
 function addMarker(tab) {
   chrome.scripting.executeScript({
     target: {tabId: tab.id},
-    files: ['marker.js']
-  }).catch(error => {
-    var w = 440;
-    var h = 160;
-    chrome.windows.create({
-      focused: true,
-      width: w,
-      height: h,
-      type: 'popup',
-      url: 'popup.html',
-      top: 0,
-      left: 0
-    });
-  });
+    files: ['drawr.js']
+  }).catch(error => {});
   chrome.scripting.insertCSS({
     target: {tabId: tab.id},
     files: ['main.css']
@@ -54,9 +42,4 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 });
 
 chrome.runtime.onInstalled.addListener(function (details) {
-  if(details.reason == "install"){
-    chrome.tabs.create({url: "https://pagemarker.org/installed"});
-  }
 });
-
-chrome.runtime.setUninstallURL("https://pagemarker.org/redirect/uninstall");

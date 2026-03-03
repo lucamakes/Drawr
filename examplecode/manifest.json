@@ -1,31 +1,38 @@
 {
-   "action": {
-      "default_icon": "icon.png",
-      "default_title": "Page Marker"
-   },
-   "background": {
-      "service_worker": "background.js"
-   },
-   "commands": {
-      "_execute_action": {
-         "suggested_key": {
-            "default": "Alt+Shift+D"
-         }
-      }
-   },
-   "description": "Draw or highlight on any website in real time. Add text, lines, and shapes. Move, undo, or redo anything you draw.",
-   "icons": {
-      "128": "icon.png"
-   },
-   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAiI97dS0lyK9ow4mxGDvr/Wy9VTNEWsLbgBz+alHqZXLn/1g7jnTVV5TviZEmrGmy7Vf4XemJScV3oM3+adCypYrryGfHvQq8tyHWvtG/NuOy3KvsA2jEi1jXfirQQJnXsSoIVIVUhIIhocwSC4FwU8UDb12sgTN5asyNDg5sBdhgHESlRPFkFt2Ho86TGUADYfmQg8PkdqnOo889+UXl452wUkkmho+3Pih4PZTYwORSvlNUyYsNRA7AXMcAwahg1VYMpi0DSSl0OLUa7pCcwWBcbe8aTucmbebEIEsWkHyzyNebmh6TTMlHdlUw7t4FTJCiEh4uKdbPIv1tDUQqvwIDAQAB",
-   "manifest_version": 3,
-   "name": "Page Marker - Draw on Web",
-   "options_page": "options.html",
-   "permissions": [ "activeTab", "storage", "scripting" ],
-   "update_url": "https://clients2.google.com/service/update2/crx",
-   "version": "5.7",
-   "web_accessible_resources": [ {
-      "matches": [ "\u003Call_urls>" ],
-      "resources": [ "main.css", "marker.png", "eraser.png", "save.png", "pointer.png", "highlighter.png", "clear.png", "undo.png", "redo.png", "move.png", "text.png", "line.png", "exit.png", "cup-border.png" ]
-   } ]
+  "manifest_version": 3,
+  "name": "Drawr - Draw and Annotate on Any Webpage",
+  "version": "1.3",
+  "description": "Draw, highlight, add shapes and text to any webpage. Take annotated screenshots with pen, highlighter, arrows, and more.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_icon": {
+      "16": "icons/128x128.png",
+      "32": "icons/128x128.png",
+      "48": "icons/128x128.png",
+      "128": "icons/128x128.png"
+    },
+    "default_title": "Toggle Drawr"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "toggle-draw": {
+      "suggested_key": {
+        "default": "Alt+H"
+      },
+      "description": "Open/close Drawr sidebar"
+    }
+  },
+  "icons": {
+    "16": "icons/128x128.png",
+    "32": "icons/128x128.png",
+    "48": "icons/128x128.png",
+    "128": "icons/128x128.png"
+  },
+  "web_accessible_resources": [{
+    "resources": ["fabric.min.js", "icons/*.svg", "cup-border.png", "main.css"],
+    "matches": ["<all_urls>"]
+  }]
 }

@@ -1,333 +1,418 @@
-#pageMarker_donateContainer {
-  margin-top: 18px;
-  display: block!important;
-  white-space: nowrap;
-  width:100%;
-  margin-left: auto;
-  margin-right: auto;
+/* ── Base font ── */
+#drawr_draggable,
+#drawr_draggable *,
+#drawr_tip,
+#drawr_tip * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
 }
 
-a.pageMarker_kofi-button {
-  box-shadow: 1px 1px 0px rgb(0 0 0 / 20%);
-  line-height: 21.6px!important;
-  display: block!important;
-  background-color: #ff0000;
-  padding: 2px 6.2px 2px 5.5px!important;
+/* ── Sidebar panel ── */
+#drawr_draggable {
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+  cursor: default !important;
+  width: 92px !important;
+  background: rgb(24, 24, 27) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-right: none !important;
+  border-radius: 14px 0 0 14px !important;
+  margin: 0 !important;
+  padding: 14px 8px !important;
+  position: fixed !important;
+  right: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  will-change: right !important;
+  z-index: 2147483647 !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.25) !important;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  letter-spacing: normal !important;
+  overflow: visible !important;
+  contain: layout style !important;
+}
+
+#drawr_draggable.drawr_collapsed {
+  right: -96px !important;
+  box-shadow: none !important;
+}
+
+/* ── Collapse / expand tab ── */
+#drawr_collapseToggle {
+  position: fixed !important;
+  right: 92px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 24px !important;
+  height: 48px !important;
+  background: rgb(24, 24, 27) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-right: none !important;
+  border-radius: 10px 0 0 10px !important;
+  box-shadow: -3px 0 10px rgba(0, 0, 0, 0.25) !important;
+  cursor: pointer !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  outline: none !important;
+  font-size: 10px !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  line-height: 1 !important;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease, background 0.15s ease !important;
+  overflow: visible !important;
+  will-change: right !important;
+  contain: layout style !important;
+}
+
+#drawr_collapseToggle.drawr_collapsed {
+  right: 0px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+#drawr_collapseToggle:hover {
+  background: rgba(40, 40, 45, 0.95) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* ── Section labels ── */
+.drawr_title {
+  line-height: 1 !important;
+  color: rgba(255, 255, 255, 0.35) !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  margin: 6px 0 6px 0 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.6px !important;
+  user-select: none !important;
+  clear: none !important;
   text-align: center !important;
-  border-radius: 7px;
-  color: #fff;
-  cursor: pointer;
-  overflow-wrap: break-word;
-  vertical-align: middle;
-  border: 0 none #fff !important;
-  font-family: 'Quicksand',Helvetica,Century Gothic,sans-serif !important;
-  text-decoration: none;
-  text-shadow: none;
-  font-weight: 700!important;
-  font-size: 14px !important;
 }
 
-.pageMarker_donationText {
-  margin: 0px;
-  font-size:14px;
-  text-align: center;
-  font-weight: bold;
+.drawr_toolsTitle {
+  margin: 8px 0 6px 0 !important;
 }
 
-span.pageMarker_kofitext {
-  color: #fff !important;
-  letter-spacing: -0.15px!important;
-  text-wrap: none;
-  vertical-align: middle;
-  line-height: 20px !important;
-  padding: 0;
-  text-align: center;
-  text-decoration: none!important;
-  text-shadow: 0 1px 1px rgb(34 34 34 / 5%);
+/* ── Color picker ── */
+#drawr_color {
+  line-height: 1 !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
 }
 
-.pageMarker_kofitext img.pageMarker_kofiimg {
-  height: 9px!important;
-  width: 13.2px!important;
-  display: initial;
-  animation: kofi-wiggle 3s infinite;
+#drawr_colorSelect {
+  height: 28px !important;
+  width: 100% !important;
+  line-height: 1 !important;
+  border-radius: 8px !important;
+  border: 2px solid rgba(255, 255, 255, 0.12) !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  margin: 0 !important;
+  transition: border-color 0.15s ease !important;
 }
 
-@keyframes kofi-wiggle{0%{transform:rotate(0) scale(1)}60%{transform:rotate(0) scale(1)}75%{transform:rotate(0) scale(1.12)}80%{transform:rotate(0) scale(1.1)}84%{transform:rotate(-10deg) scale(1.1)}88%{transform:rotate(10deg) scale(1.1)}92%{transform:rotate(-10deg) scale(1.1)}96%{transform:rotate(10deg) scale(1.1)}100%{transform:rotate(0) scale(1)}}
-
-img.pageMarker_kofiimg {
-  display: initial!important;
-  vertical-align: middle;
-  height: 9px!important;
-  width: 13.2px!important;
-  padding-top: 0!important;
-  padding-bottom: 0!important;
-  border: none;
-  margin-top: 0;
-  margin-right: 3.5px!important;
-  margin-left: 0!important;
-  margin-bottom: 1px!important;
+#drawr_colorSelect:hover {
+  border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
-#pageMarker_draggable {
-  box-sizing: content-box!important;
-  line-height:0.7!important;
-  cursor: move!important;
-  height: 302px!important;
-  width: 80px!important;
-  border-color: #ffffff!important;
-  background-color: #ffffff!important;
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 4px 12px;
-  border-style: solid!important;
-  border-width: 5px!important;
-  border-radius: 10px!important;
-  margin: 20px!important;
-  padding: 4px!important;
-  position: absolute!important;
-  right: 0px!important;
-  z-index: 2147483647!important;
-  user-select: none!important;
-  -webkit-user-select: none!important;
-  display: block;
-  text-align: left!important;
-  letter-spacing: normal!important;
-  -webkit-font-smoothing: antialiased!important;
+#drawr_colorSelect:focus {
+  outline: none !important;
 }
 
-.pageMarker_close {
-  position: absolute!important;
-  top: 5px!important;
-  right: 5px!important;
-  border: 0!important;
-  user-select: none!important;
-  -webkit-user-select: none!important;
-  background-color: transparent!important;
-  outline: 0px!important;
-  cursor: pointer!important;
-  text-decoration: none!important;
-  color: black!important;
-  font-size: 12px!important;
-  font-weight: 800!important;
-  opacity: 0.3!important;
-  text-shadow: none!important;
-  float: none!important;
+/* ── Tools grid ── */
+#drawr_tools {
+  line-height: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  margin-bottom: 4px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
 }
 
-.pageMarker_close:hover {
-  opacity: 0.6!important;
-  -webkit-text-stroke-width: inherit!important;
+.drawr_toolDiv {
+  text-align: center !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 4px !important;
+  width: 100% !important;
 }
 
-p.pageMarker_bold {
-  font-weight: 700!important;
-  margin: 0px!important;
-  line-height:1.2!important;
-  display: inline!important;
-  font-size: 14px!important;
-  font-family: Arial!important;
-  -webkit-font-smoothing: antialiased!important;
+.drawr_tool {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 6px !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border: none !important;
+  background: transparent !important;
+  transition: background 0.15s ease, color 0.15s ease !important;
 }
 
-p.pageMarker {
-  margin: 0px!important;
-  display: inline!important;
-  line-height:1.2!important;
-  font-size: 14px!important;
-  font-family: Arial!important;
-  -webkit-font-smoothing: antialiased!important;
-}
-
-q.pageMarker_quote {
-  quotes: "“" "”" "‘" "’";
-}
-
-q.pageMarker_quote::before {
-  content: open-quote;
-}
-
-q.pageMarker_quote::after {
-  content: close-quote;
-}
-
-#pageMarker_tip {
-  box-sizing: content-box!important;
-  line-height:1.2!important;
-  width: 78px!important;
-  color: #000000!important;
-  border-color: #ffffff!important;
-  background-color: #ffffff!important;
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 4px 12px;
-  border-style: solid!important;
-  border-width: 5px!important;
-  border-radius: 10px!important;
-  margin: 20px!important;
-  padding: 4px 6px 4px 4px!important;
-  position: absolute!important;
-  right: 0px!important;
-  z-index: 2147483647!important;
-  user-select: none!important;
-  -webkit-user-select: none!important;
-  display: block;
-  text-align: left!important;
-  letter-spacing: normal!important;
-  -webkit-font-smoothing: antialiased!important;
-  font-size: 14px!important;
-  font-family: Arial!important;
-}
-
-#pageMarker_thicknessSlider {
-  line-height:0.7!important;
-  outline: none;
-  -webkit-appearance: slider-horizontal;
-  border: 0px;
-  margin: 5px auto 5px auto!important;
-  width: 95%!important;
-  display: block!important;
-  padding: 3px;
-  border-radius: 5px;
-  height: auto!important;
-  background: #d7dcdf;
-  box-shadow: none!important;
-  box-sizing: content-box!important;
-  transition: none!important;
-}
-
-#pageMarker_thicknessSlider:hover {
-  box-shadow: none!important;
-}
-
-#pageMarker_tools {
-  line-height:0.7!important;
-  display: block!important;
-  margin-bottom: 5px;
-  box-sizing: content-box!important;
-}
-
-#pageMarker_colorSelect {
-  height: 35px!important;
-  line-height:1.0!important;
-  border-radius: 2px!important;
-  width: 100%!important;
-  border: 1px !important;
-  background-color: #ffffff;
-  box-shadow: none!important;
-  padding: 0px;
-  box-sizing: border-box;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  margin: 0;
-}
-
-#pageMarker_colorSelect:focus {
-  outline: none!important;
-}
-
-#pageMarker_color {
-  line-height:0.7!important;
-}
-
-#pageMarker_size {
-  line-height:0.7!important;
-}
-
-#pageMarker_canvas {
-  cursor: crosshair;
-  top: 0px;
-  left: 0px;
-  position: absolute!important;
-  z-index: 2147483646;
-  background-color: transparent;
-  user-select: none!important;
-}
-
-#pageMarker_draftCanvas {
-  z-index: 2147483645;
-}
-
-.pageMarker_title {
-  line-height:0.7!important;
-  color: #808080;
-  font-size: 11px;
-  font-family: Arial!important;
-  margin: 1px 0px 2px 0px;
-  text-transform: uppercase;
-  font-weight: 800;
-  user-select: none;
-  clear: none;
-  -webkit-font-smoothing: antialiased!important;
-}
-
-.pageMarker_toolsTitle {
-  margin: 6px 0 6px 0;
-}
-
-.pageMarker_button {
-  font-style: normal!important;
-  display: block!important;
-  box-shadow: none!important;
-  font-family: 'Arial'!important;
-  font-weight: 800!important;
-  font-size: 12px!important;
-  text-transform: uppercase!important;
-  background: white!important;
-  color: grey!important;
-  border: 1px solid grey!important;
-  border-radius: 10px!important;
-  width: 100%!important;
-  padding: 0px!important;
-  cursor: pointer!important;
-  height: 25px!important;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  user-select: none!important;
-  outline: none!important;
-  position: relative!important;
-  z-index: 2;
-  box-sizing: border-box!important;
-  transition: none!important;
-  text-align: center!important;
-  line-height: normal!important;
-  margin: 7px auto auto 0px!important;
-  -webkit-font-smoothing: antialiased!important;
-}
-
-.pageMarker_button:hover {
-  background: rgba(0, 0, 0, 0.05)!important;
-}
-
-.pageMarker_icon {
-  padding: 0px!important;
-  width: 21px!important;
-  height: 20px!important;
-  background-color: transparent!important;
-}
-
-.pageMarker_tool {
-  display: inline-block;
-  box-sizing: content-box;
-  margin: 0px 5px 5px 5px;
-  padding: 4px;
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  box-sizing: content-box!important;
-  color: #000000!important;
-  border-bottom: none!important;
-}
-
-.pageMarker_toolDiv {
-  text-align: center;
-  display: block!important;
+.drawr_icon {
+  padding: 0 !important;
+  width: 20px !important;
+  height: 20px !important;
+  background-color: transparent !important;
+  filter: invert(1) brightness(0.85) !important;
+  opacity: 0.8 !important;
 }
 
 @media (hover: hover) {
-  .pageMarker_tool:hover {
-    background: rgba(0, 0, 0, 0.05);
+  .drawr_tool:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+  .drawr_tool:hover .drawr_icon {
+    opacity: 1 !important;
   }
 }
 
-.pageMarker_tool:active {
-  background: rgba(0, 0, 0, 0.2);
+.drawr_tool:active {
+  background: rgba(255, 255, 255, 0.14) !important;
 }
+
+/* ── Active tool highlight ── */
+.drawr_tool.drawr_activeTool {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-radius: 8px !important;
+}
+
+.drawr_tool.drawr_activeTool .drawr_icon {
+  opacity: 1 !important;
+}
+
+/* ── Size slider ── */
+#drawr_size {
+  line-height: 1 !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+#drawr_thicknessSlider {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  outline: none !important;
+  border: 0 !important;
+  margin: 6px auto !important;
+  width: 100% !important;
+  height: 4px !important;
+  display: block !important;
+  padding: 0 !important;
+  border-radius: 2px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  transition: background 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+#drawr_thicknessSlider:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: none !important;
+}
+
+#drawr_thicknessSlider::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 14px !important;
+  height: 14px !important;
+  border-radius: 50% !important;
+  background: #fff !important;
+  border: none !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
+  cursor: pointer !important;
+}
+
+#drawr_thicknessSlider::-moz-range-thumb {
+  width: 14px !important;
+  height: 14px !important;
+  border-radius: 50% !important;
+  background: #fff !important;
+  border: none !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
+  cursor: pointer !important;
+}
+
+/* ── Canvas ── */
+#drawr_canvas {
+  cursor: crosshair;
+  top: 0px;
+  left: 0px;
+  position: absolute !important;
+  z-index: 2147483646;
+  background-color: transparent;
+  user-select: none !important;
+}
+
+#drawr_draftCanvas {
+  z-index: 2147483645;
+}
+
+/* ── Tip popup ── */
+#drawr_tip {
+  box-sizing: border-box !important;
+  line-height: 1.4 !important;
+  width: 200px !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  background: rgba(24, 24, 27, 0.97) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  margin: 20px !important;
+  padding: 12px 14px !important;
+  position: absolute !important;
+  right: 0px !important;
+  z-index: 2147483647 !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  display: block;
+  text-align: left !important;
+  letter-spacing: normal !important;
+  font-size: 13px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ── Close button ── */
+.drawr_close {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  border: 0 !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  background-color: transparent !important;
+  outline: 0px !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+  float: none !important;
+  transition: color 0.15s ease !important;
+}
+
+.drawr_close:hover {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* ── Text elements ── */
+p.drawr_bold {
+  font-weight: 600 !important;
+  margin: 0px !important;
+  line-height: 1.4 !important;
+  display: inline !important;
+  font-size: 13px !important;
+}
+
+p.drawr {
+  margin: 0px !important;
+  display: inline !important;
+  line-height: 1.4 !important;
+  font-size: 13px !important;
+}
+
+q.drawr_quote {
+  quotes: "\201C" "\201D" "\2018" "\2019";
+}
+q.drawr_quote::before { content: open-quote; }
+q.drawr_quote::after { content: close-quote; }
+
+/* ── Button ── */
+.drawr_button {
+  font-style: normal !important;
+  display: block !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.4px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  width: 100% !important;
+  padding: 0px !important;
+  cursor: pointer !important;
+  height: 28px !important;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  user-select: none !important;
+  outline: none !important;
+  position: relative !important;
+  z-index: 2;
+  box-sizing: border-box !important;
+  transition: background 0.15s ease !important;
+  text-align: center !important;
+  line-height: normal !important;
+  margin: 6px auto 0 0 !important;
+}
+
+.drawr_button:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* ── Donate link ── */
+#drawr_donateContainer {
+  margin-top: 6px !important;
+  display: block !important;
+  width: 100% !important;
+}
+
+a.drawr_donateLink {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  text-decoration: none !important;
+  padding: 5px 4px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: background 0.15s ease !important;
+  background-color: #ff5a16;
+}
+
+a.drawr_donateLink:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.drawr_kofiSvg {
+  width: 16px !important;
+  height: 16px !important;
+  display: block !important;
+  flex-shrink: 0 !important;
+}
+
+.drawr_donateLabel {
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  color: black !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.6px !important;
+}
+
+

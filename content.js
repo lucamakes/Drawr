@@ -11,27 +11,17 @@
     move: 'm', line: 'l', arrow: 'a', rectangle: 'r', circle: 'c',
     undo: 'z', redo: 'y', screenshot: 's', fullscreenshot: 'f', clear: 'd', toggle: 'h'
   };
-
   let keybindings = { ...defaultKeybindings };
 
   const state = {
-    active: true,
-    tool: 'pen',
-    color: '#3b82f6',
-    size: 4,
-    collapsed: false,
-    screenshotDropdownOpen: false
+    active: true, tool: 'pen', color: '#3b82f6', size: 4,
+    collapsed: false, screenshotDropdownOpen: false
   };
 
-  const colors = [
-    ['#ef4444', '#22c55e'],
-    ['#3b82f6', '#f59e0b']
-  ];
-
+  const colors = [['#ef4444', '#22c55e'], ['#3b82f6', '#f59e0b']];
   const shapeTools = ['arrow', 'rectangle', 'circle', 'line'];
-  const drawTools = ['pen', 'highlighter', 'eraser'];
 
-  // Load keybindings from storage
+  // Load keybindings
   chrome.storage.local.get(['sd_keybindings'], (result) => {
     if (result.sd_keybindings) {
       keybindings = { ...defaultKeybindings, ...result.sd_keybindings };
@@ -43,7 +33,6 @@
     chrome.storage.local.set({ sd_keybindings: keybindings });
   }
 
-  // Convert hex to rgba for highlighter
   function hexToRgba(hex, alpha = 0.4) {
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
@@ -51,117 +40,50 @@
     return `rgba(${r},${g},${b},${alpha})`;
   }
 
-  // Load Inter font for UI text
+  // Load Inter font
   const fontLink = document.createElement('link');
   fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
   fontLink.rel = 'stylesheet';
   document.head.appendChild(fontLink);
 
-  // Calculate canvas dimensions - viewport only (fixed positioning)
-  const viewportHeight = window.innerHeight;
-  const viewportWidth = window.innerWidth;
-  
-  // Create Fabric canvas with performance optimizations
+  // --- Canvas setup (example code approach: absolute, full page height, no scroll rendering) ---
+  const bodyEl = document.body;
+  const docEl = document.documentElement;
+  const scrollTop = bodyEl.scrollTop || docEl.scrollTop;
+  const docHeight = Math.max(bodyEl.scrollHeight, bodyEl.offsetHeight, docEl.clientHeight, docEl.scrollHeight, docEl.offsetHeight);
+  // Start with page height or 7500, whichever fits
+  let canvasHeight = 7500;
+  if (scrollTop + screen.height > canvasHeight) {
+    canvasHeight += Math.ceil((scrollTop + screen.height) / 7500) * 7500;
+  }
+  if (canvasHeight > docHeight) canvasHeight = docHeight;
+
   const canvasEl = document.createElement('canvas');
   canvasEl.id = 'sd-fabric-canvas';
-  document.body.appendChild(canvasEl);
+  bodyEl.appendChild(canvasEl);
 
-  // Performance: Configure fabric defaults before creating canvas
-  fabric.Object.prototype.objectCaching = true;
-  fabric.Object.prototype.statefullCache = false;
-  fabric.Object.prototype.noScaleCache = true;
+  fabric.Object.prototype.transparentCorners = true;
 
-  const canvas = new fabric.Canvas('sd-fabric-canvas', {
-    isDrawingMode: true,
-    width: viewportWidth,
-    height: viewportHeight,
-    selection: true,
-    renderOnAddRemove: false, // Manual render control for batching
-    skipTargetFind: false,
-    enableRetinaScaling: false, // Disable retina for performance
-    stopContextMenu: true
-  });
-
+  const canvas = new fabric.Canvas('sd-fabric-canvas', { isDrawingMode: true });
+  canvas.setDimensions({ width: bodyEl.clientWidth, height: canvasHeight });
+  canvas.wrapperEl.id = 'sd-canvas-wrapper';
   canvas.wrapperEl.className = 'sd-overlay active';
-  canvas.wrapperEl.style.cssText = 'position:fixed;top:0;left:0;z-index:2147483646;width:100vw;height:100vh;';
+  bodyEl.appendChild(canvas.wrapperEl);
+
   canvas.freeDrawingBrush.color = state.color;
   canvas.freeDrawingBrush.width = state.size;
 
-  // Sync canvas pan with page scroll using CSS transforms (GPU-accelerated)
-  // During scroll: use CSS translate to shift the canvas (zero-cost GPU op)
-  // After scroll ends: do a proper Fabric render with viewportTransform
-  let lastScrollX = window.scrollX;
-  let lastScrollY = window.scrollY;
-  let scrollRenderTimeout = null;
-
-  function syncScrollCSS() {
-    const sx = window.scrollX;
-    const sy = window.scrollY;
-    // Offset relative to last Fabric-rendered position
-    const dx = -(sx - lastScrollX);
-    const dy = -(sy - lastScrollY);
-    const containers = canvas.wrapperEl.querySelectorAll('canvas');
-    for (let i = 0; i < containers.length; i++) {
-      containers[i].style.transform = `translate(${dx}px, ${dy}px)`;
-    }
-  }
-
-  function syncScrollFabric() {
-    const sx = window.scrollX;
-    const sy = window.scrollY;
-    lastScrollX = sx;
-    lastScrollY = sy;
-    canvas.viewportTransform[4] = -sx;
-    canvas.viewportTransform[5] = -sy;
-    // Reset CSS transform before Fabric render
-    const containers = canvas.wrapperEl.querySelectorAll('canvas');
-    for (let i = 0; i < containers.length; i++) {
-      containers[i].style.transform = '';
-    }
-    canvas.requestRenderAll();
-  }
-
-  // Initial sync
-  syncScrollFabric();
-
-  // Performance: Throttled render function
-  let renderPending = false;
-  function requestRender() {
-    if (!renderPending) {
-      renderPending = true;
-      requestAnimationFrame(() => {
-        canvas.renderAll();
-        renderPending = false;
-      });
-    }
-  }
-
-  // History management with debounced saves
+  // History
   let historyStack = [];
   let redoStack = [];
   let currentState = null;
-  let saveTimeout = null;
 
   function saveState() {
-    // Debounce state saves to avoid excessive JSON serialization
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => {
-      if (currentState) {
-        historyStack.push(currentState);
-        if (historyStack.length > 20) historyStack.shift(); // Reduced from 30
-      }
-      redoStack = [];
-      currentState = JSON.stringify(canvas);
-    }, 100);
-  }
-
-  function saveStateImmediate() {
-    clearTimeout(saveTimeout);
+    redoStack = [];
     if (currentState) {
       historyStack.push(currentState);
-      if (historyStack.length > 20) historyStack.shift();
+      if (historyStack.length > 30) historyStack.shift();
     }
-    redoStack = [];
     currentState = JSON.stringify(canvas);
   }
 
@@ -169,9 +91,9 @@
     if (historyStack.length > 0) {
       redoStack.push(currentState);
       currentState = historyStack.pop();
+      canvas.clear();
       canvas.loadFromJSON(currentState, () => {
         canvas.renderAll();
-        // Re-apply tool settings after load
         setTool(state.tool);
       });
     }
@@ -181,6 +103,7 @@
     if (redoStack.length > 0) {
       historyStack.push(currentState);
       currentState = redoStack.pop();
+      canvas.clear();
       canvas.loadFromJSON(currentState, () => {
         canvas.renderAll();
         setTool(state.tool);
@@ -188,18 +111,16 @@
     }
   }
 
-  // Shape drawing variables
+  // Shape drawing
   let isDrawingShape = false;
   let shapeStart = null;
   let currentShape = null;
 
-
-  // Helper to get icon URL
   function iconUrl(name) {
     return chrome.runtime.getURL(`icons/${name}.svg`);
   }
 
-  // Sidebar HTML
+  // --- Sidebar HTML ---
   const sidebar = document.createElement('div');
   sidebar.className = 'sd-sidebar';
   sidebar.innerHTML = `
@@ -247,8 +168,8 @@
         <button class="sd-action-btn sd-info-btn" data-action="info" title="Settings"><img class="sd-icon" src="${iconUrl('settings')}" alt=""></button>
       </div>
       <a class="sd-donate-btn" href="https://ko-fi.com/" target="_blank" rel="noopener noreferrer" title="Buy me a coffee">
-        <svg class="sd-kofi-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-2.866-2.596-3.935-4.079c-1.093-1.48-.376-3.573 1.39-3.573 1.124 0 1.869.776 2.321 1.41.449-.634 1.197-1.41 2.321-1.41 1.766 0 2.482 2.093 1.914 3.676z"/></svg>
-        <span>Donate</span>
+        <img class="sd-kofi-icon" src="${iconUrl('kofi_symbol')}" alt="">
+        Donate
       </a>
     </div>
     <div class="sd-info-popup">
@@ -279,15 +200,15 @@
       </div>
     </div>
   `;
-  document.body.appendChild(sidebar);
+  bodyEl.appendChild(sidebar);
 
-  // FPS counter
+  // --- FPS counter ---
   const fpsEl = document.createElement('div');
   fpsEl.className = 'sd-fps';
   fpsEl.textContent = '-- FPS';
-  document.body.appendChild(fpsEl);
+  bodyEl.appendChild(fpsEl);
   let fpsFrames = 0, fpsLast = performance.now();
-  function fpsLoop() {
+  (function fpsLoop() {
     fpsFrames++;
     const now = performance.now();
     if (now - fpsLast >= 1000) {
@@ -296,10 +217,9 @@
       fpsLast = now;
     }
     requestAnimationFrame(fpsLoop);
-  }
-  requestAnimationFrame(fpsLoop);
+  })();
 
-  // Keybindings UI
+  // --- Keybindings UI ---
   function updateKeybindingsUI() {
     sidebar.querySelectorAll('.sd-keybind').forEach(row => {
       const action = row.dataset.action;
@@ -307,7 +227,6 @@
       if (keybindings[action]) input.value = keybindings[action];
     });
   }
-
   sidebar.querySelectorAll('.sd-keybind-input').forEach(input => {
     input.addEventListener('input', (e) => {
       const action = e.target.closest('.sd-keybind').dataset.action;
@@ -316,28 +235,23 @@
     });
     input.addEventListener('focus', () => input.select());
   });
-
   sidebar.querySelector('.sd-reset-keybinds').addEventListener('click', () => {
     keybindings = { ...defaultKeybindings };
     updateKeybindingsUI();
     saveKeybindings();
   });
 
-
-  // Screenshot dropdown
+  // --- Screenshot dropdown ---
   const screenshotBtn = sidebar.querySelector('.sd-screenshot-btn');
   const screenshotDropdown = sidebar.querySelector('.sd-screenshot-dropdown');
-
   document.addEventListener('click', () => {
     if (state.screenshotDropdownOpen) { screenshotDropdown.classList.remove('open'); state.screenshotDropdownOpen = false; }
   });
-
   screenshotBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     state.screenshotDropdownOpen = !state.screenshotDropdownOpen;
     screenshotDropdown.classList.toggle('open', state.screenshotDropdownOpen);
   });
-
   screenshotDropdown.querySelectorAll('.sd-dropdown-item').forEach(item => {
     item.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -350,7 +264,7 @@
     });
   });
 
-  // Colors
+  // --- Colors ---
   const colorsContainer = sidebar.querySelector('.sd-colors');
   colors.forEach(row => {
     const rowDiv = document.createElement('div');
@@ -364,7 +278,6 @@
     });
     colorsContainer.appendChild(rowDiv);
   });
-
   const pickerRow = document.createElement('div');
   pickerRow.className = 'sd-color-row';
   const pickerWrapper = document.createElement('div');
@@ -380,17 +293,15 @@
   pickerWrapper.appendChild(picker);
   pickerRow.appendChild(pickerWrapper);
   colorsContainer.appendChild(pickerRow);
-
   picker.addEventListener('input', (e) => {
     setColor(e.target.value);
     colorsContainer.querySelectorAll('.sd-color-btn').forEach(b => b.classList.remove('active'));
   });
 
-  // Event handlers
+  // --- Sidebar event handlers ---
   const toggleTab = sidebar.querySelector('.sd-toggle-tab');
   const sizeSlider = sidebar.querySelector('.sd-size-slider');
   const sizeValue = sidebar.querySelector('.sd-size-value');
-
   toggleTab.addEventListener('click', toggleCollapse);
   sidebar.querySelectorAll('.sd-tool-btn').forEach(btn => {
     btn.addEventListener('click', () => setTool(btn.dataset.tool));
@@ -403,7 +314,6 @@
     sizeValue.textContent = state.size + 'px';
     updateBrushSize();
   });
-
   sidebar.querySelectorAll('.sd-action-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const a = btn.dataset.action;
@@ -413,24 +323,19 @@
       else if (a === 'info') toggleInfo();
     });
   });
-
   const infoPopup = sidebar.querySelector('.sd-info-popup');
   const infoClose = sidebar.querySelector('.sd-info-close');
   function toggleInfo() { infoPopup.classList.toggle('visible'); }
   infoClose.addEventListener('click', () => infoPopup.classList.remove('visible'));
 
-
-  // Tool functions
+  // --- Tool functions ---
   function setTool(tool) {
     state.tool = tool;
     canvas.discardActiveObject().renderAll();
-    
-    // Update UI - simple active toggle for all tool buttons
     sidebar.querySelectorAll('.sd-tool-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.tool === tool);
     });
 
-    // Configure canvas based on tool
     if (tool === 'pointer') {
       canvas.isDrawingMode = false;
       canvas.selection = false;
@@ -441,8 +346,8 @@
       canvas.selection = true;
       canvas.wrapperEl.style.pointerEvents = 'auto';
       canvas.wrapperEl.style.cursor = 'default';
-      canvas.getObjects().forEach(obj => { 
-        obj.selectable = true; 
+      canvas.getObjects().forEach(obj => {
+        obj.selectable = true;
         obj.hoverCursor = obj.type === 'i-text' ? 'text' : 'move';
       });
     } else if (tool === 'text') {
@@ -450,14 +355,9 @@
       canvas.selection = true;
       canvas.wrapperEl.style.pointerEvents = 'auto';
       canvas.wrapperEl.style.cursor = 'text';
-      // Make existing text objects selectable/editable
-      canvas.getObjects().forEach(obj => { 
-        if (obj.type === 'i-text') {
-          obj.selectable = true;
-          obj.hoverCursor = 'text';
-        } else {
-          obj.selectable = false;
-        }
+      canvas.getObjects().forEach(obj => {
+        if (obj.type === 'i-text') { obj.selectable = true; obj.hoverCursor = 'text'; }
+        else { obj.selectable = false; }
       });
     } else if (tool === 'eraser') {
       canvas.isDrawingMode = true;
@@ -495,35 +395,18 @@
   function setColor(color) {
     state.color = color;
     colorsContainer.querySelectorAll('.sd-color-btn').forEach(b => b.classList.toggle('active', b.dataset.color === color));
-    
-    if (state.tool === 'highlighter') {
-      canvas.freeDrawingBrush.color = hexToRgba(color, 0.4);
-    } else if (state.tool === 'pen') {
-      canvas.freeDrawingBrush.color = color;
-    }
+    if (state.tool === 'highlighter') canvas.freeDrawingBrush.color = hexToRgba(color, 0.4);
+    else if (state.tool === 'pen') canvas.freeDrawingBrush.color = color;
   }
 
   function updateBrushSize() {
-    if (state.tool === 'eraser' && fabric.EraserBrush) {
-      canvas.freeDrawingBrush.width = state.size * 3;
-    } else if (state.tool === 'highlighter') {
-      canvas.freeDrawingBrush.width = state.size * 4;
-    } else if (canvas.freeDrawingBrush) {
-      canvas.freeDrawingBrush.width = state.size;
-    }
+    if (state.tool === 'eraser' && fabric.EraserBrush) canvas.freeDrawingBrush.width = state.size * 3;
+    else if (state.tool === 'highlighter') canvas.freeDrawingBrush.width = state.size * 4;
+    else if (canvas.freeDrawingBrush) canvas.freeDrawingBrush.width = state.size;
   }
 
-  function clearCanvas() {
-    saveStateImmediate();
-    canvas.clear();
-    requestRender();
-  }
-
-  function toggleCollapse() {
-    state.collapsed = !state.collapsed;
-    sidebar.classList.toggle('collapsed', state.collapsed);
-  }
-
+  function clearCanvas() { saveState(); canvas.clear(); canvas.renderAll(); }
+  function toggleCollapse() { state.collapsed = !state.collapsed; sidebar.classList.toggle('collapsed', state.collapsed); }
   function toggle() {
     state.active = !state.active;
     canvas.wrapperEl.classList.toggle('active', state.active);
@@ -531,361 +414,161 @@
     sidebar.classList.toggle('sd-hidden', !state.active);
   }
 
-
-  // Shape drawing with mouse events
+  // --- Shape drawing ---
   canvas.on('mouse:down', function(opt) {
     if (state.tool === 'text' && !canvas.getActiveObject()) {
       const pointer = canvas.getPointer(opt.e);
       const text = new fabric.IText('', {
-        left: pointer.x,
-        top: pointer.y,
+        left: pointer.x, top: pointer.y,
         fontFamily: 'Inter, Arial, sans-serif',
-        fontSize: state.size * 4,
-        fill: state.color,
-        selectable: true
+        fontSize: state.size * 4, fill: state.color, selectable: true
       });
       canvas.add(text);
       canvas.setActiveObject(text);
       text.enterEditing();
       return;
     }
-
     if (!shapeTools.includes(state.tool)) return;
-    
     isDrawingShape = true;
     const pointer = canvas.getPointer(opt.e);
     shapeStart = { x: pointer.x, y: pointer.y };
 
-    if (state.tool === 'line') {
+    if (state.tool === 'line' || state.tool === 'arrow') {
       currentShape = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], {
-        stroke: state.color,
-        strokeWidth: state.size,
-        selectable: false,
-        hoverCursor: 'default',
-        objectCaching: false // Disable during drawing for responsiveness
-      });
-    } else if (state.tool === 'arrow') {
-      currentShape = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], {
-        stroke: state.color,
-        strokeWidth: state.size,
-        selectable: false,
-        hoverCursor: 'default',
-        objectCaching: false
+        stroke: state.color, strokeWidth: state.size, selectable: false, hoverCursor: 'default'
       });
     } else if (state.tool === 'rectangle') {
       currentShape = new fabric.Rect({
-        left: pointer.x,
-        top: pointer.y,
-        width: 0,
-        height: 0,
-        stroke: state.color,
-        strokeWidth: state.size,
-        fill: 'transparent',
-        selectable: false,
-        hoverCursor: 'default',
-        objectCaching: false
+        left: pointer.x, top: pointer.y, width: 0, height: 0,
+        stroke: state.color, strokeWidth: state.size, fill: 'transparent', selectable: false, hoverCursor: 'default'
       });
     } else if (state.tool === 'circle') {
       currentShape = new fabric.Ellipse({
-        left: pointer.x,
-        top: pointer.y,
-        rx: 0,
-        ry: 0,
-        stroke: state.color,
-        strokeWidth: state.size,
-        fill: 'transparent',
-        selectable: false,
-        hoverCursor: 'default',
-        objectCaching: false
+        left: pointer.x, top: pointer.y, rx: 0, ry: 0,
+        stroke: state.color, strokeWidth: state.size, fill: 'transparent', selectable: false, hoverCursor: 'default'
       });
     }
-
-    if (currentShape) {
-      canvas.add(currentShape);
-      requestRender();
-    }
+    if (currentShape) canvas.add(currentShape);
   });
 
   canvas.on('mouse:move', function(opt) {
     if (!isDrawingShape || !currentShape || !shapeStart) return;
-
     const pointer = canvas.getPointer(opt.e);
-
     if (state.tool === 'line' || state.tool === 'arrow') {
       currentShape.set({ x2: pointer.x, y2: pointer.y });
     } else if (state.tool === 'rectangle') {
-      const left = Math.min(shapeStart.x, pointer.x);
-      const top = Math.min(shapeStart.y, pointer.y);
-      const width = Math.abs(pointer.x - shapeStart.x);
-      const height = Math.abs(pointer.y - shapeStart.y);
-      currentShape.set({ left, top, width, height });
+      currentShape.set({
+        left: Math.min(shapeStart.x, pointer.x), top: Math.min(shapeStart.y, pointer.y),
+        width: Math.abs(pointer.x - shapeStart.x), height: Math.abs(pointer.y - shapeStart.y)
+      });
     } else if (state.tool === 'circle') {
       const rx = Math.abs(pointer.x - shapeStart.x) / 2;
       const ry = Math.abs(pointer.y - shapeStart.y) / 2;
-      const cx = (shapeStart.x + pointer.x) / 2;
-      const cy = (shapeStart.y + pointer.y) / 2;
-      currentShape.set({ left: cx - rx, top: cy - ry, rx, ry });
+      currentShape.set({ left: (shapeStart.x + pointer.x) / 2 - rx, top: (shapeStart.y + pointer.y) / 2 - ry, rx, ry });
     }
-
-    requestRender();
+    canvas.renderAll();
   });
 
-  canvas.on('mouse:up', function(opt) {
+  canvas.on('mouse:up', function() {
     if (!isDrawingShape) return;
-
-    // Enable caching on the completed shape
-    if (currentShape) {
-      currentShape.objectCaching = true;
-    }
-
-    // For arrow, add arrowhead
     if (state.tool === 'arrow' && currentShape) {
-      const x1 = currentShape.x1, y1 = currentShape.y1;
-      const x2 = currentShape.x2, y2 = currentShape.y2;
+      const x1 = currentShape.x1, y1 = currentShape.y1, x2 = currentShape.x2, y2 = currentShape.y2;
       const angle = Math.atan2(y2 - y1, x2 - x1);
       const headLen = Math.max(state.size * 4, 15);
-
-      const arrowHead = new fabric.Triangle({
-        left: x2,
-        top: y2,
-        width: headLen,
-        height: headLen,
-        fill: state.color,
-        angle: (angle * 180 / Math.PI) + 90,
-        originX: 'center',
-        originY: 'center',
-        selectable: false,
-        hoverCursor: 'default',
-        objectCaching: true
-      });
-      canvas.add(arrowHead);
+      canvas.add(new fabric.Triangle({
+        left: x2, top: y2, width: headLen, height: headLen, fill: state.color,
+        angle: (angle * 180 / Math.PI) + 90, originX: 'center', originY: 'center',
+        selectable: false, hoverCursor: 'default'
+      }));
     }
-
     isDrawingShape = false;
     shapeStart = null;
     currentShape = null;
-    requestRender();
+    canvas.renderAll();
     saveState();
   });
 
-  // Save state after drawing
-  canvas.on('path:created', function(e) {
-    // Enable caching on new paths
-    if (e.path) e.path.objectCaching = true;
-    requestRender();
-    saveState();
-  });
-
-  canvas.on('object:modified', function() {
-    saveState();
-  });
-
+  canvas.on('path:created', function() { saveState(); });
+  canvas.on('object:modified', function() { saveState(); });
   canvas.on('text:editing:exited', function(e) {
     saveState();
-    // Remove empty text objects
-    if (e.target && e.target.text === '') {
-      canvas.remove(e.target);
-      requestRender();
-    }
+    if (e.target && e.target.text === '') { canvas.remove(e.target); canvas.renderAll(); }
   });
-
-  // Double-click to edit existing text
   canvas.on('mouse:dblclick', function(opt) {
     const target = opt.target;
-    if (target && target.type === 'i-text') {
-      canvas.setActiveObject(target);
-      target.enterEditing();
-      target.selectAll();
-    }
+    if (target && target.type === 'i-text') { canvas.setActiveObject(target); target.enterEditing(); target.selectAll(); }
   });
 
-
-  // Area selection screenshot
+  // --- Screenshots ---
   let areaSelection = null;
-  
+
   function startAreaScreenshot() {
-    // Create selection overlay
     areaSelection = document.createElement('div');
     areaSelection.className = 'sd-area-selection-overlay';
     areaSelection.innerHTML = '<div class="sd-area-selection-box"></div><div class="sd-area-selection-hint">Click and drag to select area</div>';
-    document.body.appendChild(areaSelection);
-    
+    bodyEl.appendChild(areaSelection);
     const box = areaSelection.querySelector('.sd-area-selection-box');
     const hint = areaSelection.querySelector('.sd-area-selection-hint');
     let startX, startY, isSelecting = false;
-    
-    // Hide canvas and sidebar during selection
     canvas.wrapperEl.style.opacity = '0.3';
     sidebar.style.display = 'none';
-    
-    function onMouseDown(e) {
-      isSelecting = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      box.style.left = startX + 'px';
-      box.style.top = startY + 'px';
-      box.style.width = '0';
-      box.style.height = '0';
-      box.style.display = 'block';
-      hint.style.display = 'none';
-    }
-    
-    function onMouseMove(e) {
-      if (!isSelecting) return;
-      const currentX = e.clientX;
-      const currentY = e.clientY;
-      const left = Math.min(startX, currentX);
-      const top = Math.min(startY, currentY);
-      const width = Math.abs(currentX - startX);
-      const height = Math.abs(currentY - startY);
-      box.style.left = left + 'px';
-      box.style.top = top + 'px';
-      box.style.width = width + 'px';
-      box.style.height = height + 'px';
-    }
-    
-    function onMouseUp(e) {
-      if (!isSelecting) return;
-      isSelecting = false;
-      
-      const rect = box.getBoundingClientRect();
-      if (rect.width < 10 || rect.height < 10) {
-        cancelAreaSelection();
-        return;
-      }
-      
-      captureArea(rect);
-    }
-    
-    function onKeyDown(e) {
-      if (e.key === 'Escape') {
-        cancelAreaSelection();
-      }
-    }
-    
-    function cancelAreaSelection() {
-      cleanup();
-      canvas.wrapperEl.style.opacity = '1';
-      sidebar.style.display = '';
-    }
-    
-    function cleanup() {
-      areaSelection.removeEventListener('mousedown', onMouseDown);
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-      document.removeEventListener('keydown', onKeyDown);
-      areaSelection.remove();
-      areaSelection = null;
-    }
-    
+
+    function onMouseDown(e) { isSelecting = true; startX = e.clientX; startY = e.clientY; box.style.left = startX + 'px'; box.style.top = startY + 'px'; box.style.width = '0'; box.style.height = '0'; box.style.display = 'block'; hint.style.display = 'none'; }
+    function onMouseMove(e) { if (!isSelecting) return; box.style.left = Math.min(startX, e.clientX) + 'px'; box.style.top = Math.min(startY, e.clientY) + 'px'; box.style.width = Math.abs(e.clientX - startX) + 'px'; box.style.height = Math.abs(e.clientY - startY) + 'px'; }
+    function onMouseUp() { if (!isSelecting) return; isSelecting = false; const rect = box.getBoundingClientRect(); if (rect.width < 10 || rect.height < 10) { cancelArea(); return; } captureArea(rect); }
+    function onKeyDown(e) { if (e.key === 'Escape') cancelArea(); }
+    function cancelArea() { cleanup(); canvas.wrapperEl.style.opacity = '1'; sidebar.style.display = ''; }
+    function cleanup() { areaSelection.removeEventListener('mousedown', onMouseDown); document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); document.removeEventListener('keydown', onKeyDown); areaSelection.remove(); areaSelection = null; }
+
     function captureArea(rect) {
       cleanup();
       canvas.wrapperEl.style.display = 'none';
-      document.documentElement.classList.add('sd-hide-scrollbar');
-      
-      const scrollX = window.scrollX;
-      const scrollY = window.scrollY;
-      const dpr = window.devicePixelRatio || 1;
-      
+      docEl.classList.add('sd-hide-scrollbar');
+      const scrollX = window.scrollX, scrollY = window.scrollY, dpr = window.devicePixelRatio || 1;
       setTimeout(() => {
         chrome.runtime.sendMessage({ action: 'capture-screenshot' }, (response) => {
-          canvas.wrapperEl.style.display = '';
-          canvas.wrapperEl.style.opacity = '1';
-          sidebar.style.display = '';
-          document.documentElement.classList.remove('sd-hide-scrollbar');
-          
+          canvas.wrapperEl.style.display = ''; canvas.wrapperEl.style.opacity = '1'; sidebar.style.display = '';
+          docEl.classList.remove('sd-hide-scrollbar');
           if (response && response.dataUrl) {
             const img = new Image();
             img.onload = () => {
-              // Create canvas for the selected area
-              const areaCanvas = document.createElement('canvas');
-              areaCanvas.width = rect.width * dpr;
-              areaCanvas.height = rect.height * dpr;
-              const ctx = areaCanvas.getContext('2d');
-              
-              // Draw the cropped region from the screenshot
-              ctx.drawImage(
-                img,
-                rect.left * dpr, rect.top * dpr,
-                rect.width * dpr, rect.height * dpr,
-                0, 0,
-                rect.width * dpr, rect.height * dpr
-              );
-              
-              // Draw fabric canvas content on top (cropped to selection)
-              const fabricDataUrl = canvas.toDataURL({
-                left: scrollX + rect.left,
-                top: scrollY + rect.top,
-                width: rect.width,
-                height: rect.height,
-                multiplier: dpr
-              });
-              
-              const fabricImg = new Image();
-              fabricImg.onload = () => {
-                ctx.drawImage(fabricImg, 0, 0);
-                const link = document.createElement('a');
-                link.download = `screenshot-area-${Date.now()}.png`;
-                link.href = areaCanvas.toDataURL('image/png');
-                link.click();
-              };
-              fabricImg.src = fabricDataUrl;
+              const ac = document.createElement('canvas');
+              ac.width = rect.width * dpr; ac.height = rect.height * dpr;
+              const ctx = ac.getContext('2d');
+              ctx.drawImage(img, rect.left * dpr, rect.top * dpr, rect.width * dpr, rect.height * dpr, 0, 0, rect.width * dpr, rect.height * dpr);
+              const fd = canvas.toDataURL({ left: scrollX + rect.left, top: scrollY + rect.top, width: rect.width, height: rect.height, multiplier: dpr });
+              const fi = new Image();
+              fi.onload = () => { ctx.drawImage(fi, 0, 0); const link = document.createElement('a'); link.download = `screenshot-area-${Date.now()}.png`; link.href = ac.toDataURL('image/png'); link.click(); };
+              fi.src = fd;
             };
             img.src = response.dataUrl;
           }
         });
       }, 100);
     }
-    
     areaSelection.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener('keydown', onKeyDown);
   }
 
-  // Screenshot functions
   function takeScreenshot() {
-    canvas.wrapperEl.style.display = 'none';
-    sidebar.style.display = 'none';
-    document.documentElement.classList.add('sd-hide-scrollbar');
-    
-    const scrollX = window.scrollX;
-    const scrollY = window.scrollY;
-    const dpr = window.devicePixelRatio || 1;
-
+    canvas.wrapperEl.style.display = 'none'; sidebar.style.display = 'none';
+    docEl.classList.add('sd-hide-scrollbar');
+    const scrollX = window.scrollX, scrollY = window.scrollY, dpr = window.devicePixelRatio || 1;
     setTimeout(() => {
       chrome.runtime.sendMessage({ action: 'capture-screenshot' }, (response) => {
-        canvas.wrapperEl.style.display = '';
-        sidebar.style.display = '';
-        document.documentElement.classList.remove('sd-hide-scrollbar');
-        
+        canvas.wrapperEl.style.display = ''; sidebar.style.display = '';
+        docEl.classList.remove('sd-hide-scrollbar');
         if (response && response.dataUrl) {
           const img = new Image();
           img.onload = () => {
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = img.width;
-            tempCanvas.height = img.height;
-            const ctx = tempCanvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            
-            // Draw fabric canvas content on top
-            const fabricDataUrl = canvas.toDataURL({
-              left: scrollX,
-              top: scrollY,
-              width: window.innerWidth,
-              height: window.innerHeight,
-              multiplier: dpr
-            });
-            
-            const fabricImg = new Image();
-            fabricImg.onload = () => {
-              ctx.drawImage(fabricImg, 0, 0);
-              const link = document.createElement('a');
-              link.download = `screenshot-${Date.now()}.png`;
-              link.href = tempCanvas.toDataURL('image/png');
-              link.click();
-            };
-            fabricImg.src = fabricDataUrl;
+            const tc = document.createElement('canvas'); tc.width = img.width; tc.height = img.height;
+            const ctx = tc.getContext('2d'); ctx.drawImage(img, 0, 0);
+            const fd = canvas.toDataURL({ left: scrollX, top: scrollY, width: window.innerWidth, height: window.innerHeight, multiplier: dpr });
+            const fi = new Image();
+            fi.onload = () => { ctx.drawImage(fi, 0, 0); const link = document.createElement('a'); link.download = `screenshot-${Date.now()}.png`; link.href = tc.toDataURL('image/png'); link.click(); };
+            fi.src = fd;
           };
           img.src = response.dataUrl;
         }
@@ -894,97 +577,35 @@
   }
 
   async function takeFullPageScreenshot() {
-    canvas.wrapperEl.style.display = 'none';
-    sidebar.style.display = 'none';
-    document.documentElement.classList.add('sd-hide-scrollbar');
-    
-    const originalScrollX = window.scrollX;
-    const originalScrollY = window.scrollY;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const fullWidth = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth);
-    const fullHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+    canvas.wrapperEl.style.display = 'none'; sidebar.style.display = 'none';
+    docEl.classList.add('sd-hide-scrollbar');
+    const origSX = window.scrollX, origSY = window.scrollY;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const fw = Math.max(docEl.scrollWidth, bodyEl.scrollWidth);
+    const fh = Math.max(docEl.scrollHeight, bodyEl.scrollHeight);
     const dpr = window.devicePixelRatio || 1;
-    
-    const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = fullWidth * dpr;
-    finalCanvas.height = fullHeight * dpr;
-    const finalCtx = finalCanvas.getContext('2d');
-    finalCtx.scale(dpr, dpr);
-    
-    const cols = Math.ceil(fullWidth / viewportWidth);
-    const rows = Math.ceil(fullHeight / viewportHeight);
-    
+    const fc = document.createElement('canvas'); fc.width = fw * dpr; fc.height = fh * dpr;
+    const fctx = fc.getContext('2d'); fctx.scale(dpr, dpr);
+    const cols = Math.ceil(fw / vw), rows = Math.ceil(fh / vh);
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
-        const scrollX = col * viewportWidth;
-        const scrollY = row * viewportHeight;
-        
-        window.scrollTo(scrollX, scrollY);
+        window.scrollTo(col * vw, row * vh);
         await new Promise(r => setTimeout(r, 150));
-        
-        const actualScrollX = window.scrollX;
-        const actualScrollY = window.scrollY;
-        
-        const dataUrl = await new Promise(resolve => {
-          chrome.runtime.sendMessage({ action: 'capture-screenshot' }, (response) => {
-            resolve(response?.dataUrl);
-          });
-        });
-        
-        if (dataUrl) {
-          const img = await new Promise(resolve => {
-            const i = new Image();
-            i.onload = () => resolve(i);
-            i.src = dataUrl;
-          });
-          
-          finalCtx.drawImage(img, actualScrollX, actualScrollY, img.width / dpr, img.height / dpr);
-        }
+        const asx = window.scrollX, asy = window.scrollY;
+        const dataUrl = await new Promise(resolve => { chrome.runtime.sendMessage({ action: 'capture-screenshot' }, (r) => resolve(r?.dataUrl)); });
+        if (dataUrl) { const img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = dataUrl; }); fctx.drawImage(img, asx, asy, img.width / dpr, img.height / dpr); }
       }
     }
-    
-    // Draw fabric canvas content — temporarily reset viewport transform to get all objects
-    const savedTransform = canvas.viewportTransform.slice();
-    canvas.viewportTransform = [1, 0, 0, 1, 0, 0];
-    const objects = canvas.getObjects();
-    let minX = 0, minY = 0, maxX = 0, maxY = 0;
-    objects.forEach(obj => {
-      const bound = obj.getBoundingRect();
-      if (bound.left < minX) minX = bound.left;
-      if (bound.top < minY) minY = bound.top;
-      if (bound.left + bound.width > maxX) maxX = bound.left + bound.width;
-      if (bound.top + bound.height > maxY) maxY = bound.top + bound.height;
-    });
-    const fabricDataUrl = canvas.toDataURL({
-      left: 0,
-      top: 0,
-      width: Math.max(maxX, fullWidth),
-      height: Math.max(maxY, fullHeight),
-      multiplier: dpr
-    });
-    canvas.viewportTransform = savedTransform;
-    const fabricImg = await new Promise(resolve => {
-      const i = new Image();
-      i.onload = () => resolve(i);
-      i.src = fabricDataUrl;
-    });
-    finalCtx.drawImage(fabricImg, 0, 0, Math.max(maxX, fullWidth), Math.max(maxY, fullHeight));
-    
-    window.scrollTo(originalScrollX, originalScrollY);
-    
-    canvas.wrapperEl.style.display = '';
-    sidebar.style.display = '';
-    document.documentElement.classList.remove('sd-hide-scrollbar');
-    
-    const link = document.createElement('a');
-    link.download = `fullpage-screenshot-${Date.now()}.png`;
-    link.href = finalCanvas.toDataURL('image/png');
-    link.click();
+    const fd = canvas.toDataURL({ multiplier: dpr });
+    const fi = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = fd; });
+    fctx.drawImage(fi, 0, 0, canvas.width, canvas.height);
+    window.scrollTo(origSX, origSY);
+    canvas.wrapperEl.style.display = ''; sidebar.style.display = '';
+    docEl.classList.remove('sd-hide-scrollbar');
+    const link = document.createElement('a'); link.download = `fullpage-screenshot-${Date.now()}.png`; link.href = fc.toDataURL('image/png'); link.click();
   }
 
-
-  // Keyboard shortcuts
+  // --- Keyboard shortcuts ---
   let isTextEditing = false;
   canvas.on('text:editing:entered', () => { isTextEditing = true; });
   canvas.on('text:editing:exited', () => { isTextEditing = false; });
@@ -1010,52 +631,39 @@
       else if (key === keybindings.clear) { e.preventDefault(); clearCanvas(); }
       else if (key === keybindings.toggle) { e.preventDefault(); toggleCollapse(); }
     }
-    // Delete selected objects
-    if (e.key === 'Backspace' || e.key === 'Delete') {
-      if (!isTextEditing && state.tool === 'move') {
-        const activeObjects = canvas.getActiveObjects();
-        if (activeObjects.length > 0) {
-          activeObjects.forEach(obj => canvas.remove(obj));
-          canvas.discardActiveObject();
-          canvas.renderAll();
-          saveState();
-        }
-      }
+    if ((e.key === 'Backspace' || e.key === 'Delete') && !isTextEditing && state.tool === 'move') {
+      const active = canvas.getActiveObjects();
+      if (active.length > 0) { active.forEach(obj => canvas.remove(obj)); canvas.discardActiveObject(); canvas.renderAll(); saveState(); }
     }
-    
-    // Escape to exit
-    if (e.key === 'Escape') {
-      toggle();
-    }
+    if (e.key === 'Escape') toggle();
   }, true);
 
-  // Message listener
+  // --- Message listener ---
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.action === 'toggle') toggle();
     else if (msg.action === 'clear-canvas') clearCanvas();
     else if (msg.action === 'undo') undo();
   });
 
-  // Handle scroll - CSS transform during scroll, Fabric render when scroll stops
-  window.addEventListener('scroll', () => {
-    syncScrollCSS();
-    clearTimeout(scrollRenderTimeout);
-    scrollRenderTimeout = setTimeout(syncScrollFabric, 100);
-  }, { passive: true });
+  // --- Scroll: grow canvas if needed (example code approach) ---
+  window.onscroll = function() {
+    const st = bodyEl.scrollTop || docEl.scrollTop;
+    if (st + screen.height > canvas.getHeight()) {
+      const fullH = Math.max(bodyEl.scrollHeight, bodyEl.offsetHeight, docEl.clientHeight, docEl.scrollHeight, docEl.offsetHeight);
+      let newH = canvas.getHeight() + 7500 < fullH ? canvas.getHeight() + 7500 : fullH;
+      if (newH !== canvas.getHeight()) canvas.setHeight(newH);
+    }
+  };
 
-  // Handle resize (debounced)
+  // --- Resize ---
   let resizeTimeout = null;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-      canvas.setWidth(window.innerWidth);
-      canvas.setHeight(window.innerHeight);
-      syncScrollFabric();
-    }, 150);
+    resizeTimeout = setTimeout(() => { canvas.setWidth(bodyEl.clientWidth); }, 150);
   });
 
-  // Initialize
+  // --- Initialize ---
   window.__screenDrawToggle = toggle;
   setTimeout(() => sidebar.classList.add('sd-visible'), 50);
-  saveStateImmediate(); // Save initial empty state
+  saveState();
 })();
