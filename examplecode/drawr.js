@@ -643,7 +643,7 @@ function init(settings) {
       inp.addEventListener("keydown", function (ev) {
         ev.preventDefault();
         ev.stopPropagation();
-        if (ev.code.startsWith("Key")) {
+        if (ev.code.startsWith("Key") || ev.code.startsWith("Digit")) {
           keyBindings[inp.dataset.tool] = ev.code;
           if (ev.key.length === 1) keyDisplayMap[ev.code] = ev.key.toUpperCase();
           inp.value = codeToDisplay(ev.code);
